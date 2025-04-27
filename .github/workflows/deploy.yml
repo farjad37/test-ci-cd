@@ -3,28 +3,35 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master
+      - master  # Trigger deploy on push to main branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: SSH into EC2 and Deploy
-        uses: appleboy/ssh-action@v0.1.1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            cd /home/ec2-user/var/www/test-ci-cd # change this to your app folder
+      
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+      
+      - name: Add EC2 to known hosts
+        run: |
+          ssh-keyscan -H 16.170.234.250 >> ~/.ssh/known_hosts
+      
+      - name: Deploy to EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ec2-user@16.170.234.250 << EOF
+            cd /home/ec2-user/var/www/test-ci-cd
             git pull origin master
             npm install
             npm run build
             pm2 stop nest-app || true
             pm2 start dist/main.js --name nest-app
             pm2 save
+          EOF
