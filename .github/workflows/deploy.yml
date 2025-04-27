@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master  # Trigger deploy on push to main branch
+      - master  # Trigger deploy on push to master branch
 
 jobs:
   deploy:
@@ -11,22 +11,27 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
+
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa  # The private key is passed securely via secrets
+          chmod 600 ~/.ssh/id_rsa  # Set the correct permissions for the private key
         env:
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-      
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}  # Use GitHub secret for the private key
+
       - name: Add EC2 to known hosts
         run: |
-          ssh-keyscan -H 16.170.234.250 >> ~/.ssh/known_hosts
-      
+          ssh-keyscan -H 16.170.234.250 >> ~/.ssh/known_hosts  # Ensure EC2 is trusted by the runner
+
+      - name: Start SSH agent and load key
+        run: |
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_rsa
+
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/id_rsa ec2-user@16.170.234.250 << EOF
+          ssh ec2-user@16.170.234.250 << EOF
             cd /home/ec2-user/var/www/test-ci-cd
             git pull origin master
             npm install
