@@ -1,0 +1,58 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Trigger the action when code is pushed to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Run on a Ubuntu virtual machine
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Checkout your repo's code
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Set Node.js version as per your app's requirement
+
+      - name: Install dependencies
+        run: npm install  # Install dependencies in your app
+
+      - name: Build the app
+        run: npm run build  # Build the app (you can replace with the relevant build command)
+
+      - name: Archive production files
+        run: tar -czf app.tar.gz ./dist  # Archive the build folder (replace `./dist` if different)
+
+      - name: Upload production files to EC2
+        uses: appleboy/ssh-action@v0.1.1
+        with:
+          host: ${{ secrets.EC2_HOST }}  # EC2 Host IP from GitHub secrets
+          username: ec2-user  # EC2 username (this may vary depending on your instance)
+          key: ${{ secrets.EC2_SSH_KEY }}  # SSH key from GitHub secrets
+          port: 22
+          script: |
+            mkdir -p /home/ec2-user/app  # Create app directory on EC2
+            rm -rf /home/ec2-user/app/*  # Clean up previous app files
+            tar -xzvf app.tar.gz -C /home/ec2-user/app  # Extract files
+            cd /home/ec2-user/app  # Go to app directory
+            npm install --production  # Install production dependencies
+
+      - name: Start the app with PM2
+        uses: appleboy/ssh-action@v0.1.1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            pm2 stop app || true  # Stop any previous instances
+            pm2 start dist/main.js --name nest-app  # Start the app (replace with the correct entry point)
+            pm2 save  # Save the PM2 process list
+
+      - name: Verify the app is running
+        run: curl -I http://${{ secrets.EC2_HOST }}:3000  # Check if the app is running on the EC2 public IP (adjust port if necessary)
+
