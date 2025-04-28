@@ -1,6 +1,6 @@
 FROM node:18-alpine as builder
 
-WORKDIR /build
+WORKDIR 
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
