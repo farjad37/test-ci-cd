@@ -1,7 +1,7 @@
-# Use NodeJS official image
+# Use Node.js official image
 FROM node:18
 
-# Create app directory
+# Set working directory
 WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json
@@ -10,17 +10,14 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
-# Copy all source files
+# Copy the rest of the application
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build the app
-RUN npm run build
+# Run build step to compile the app
+RUN npm run build  # This should generate the 'dist' folder
 
 # Expose the port
 EXPOSE 3000
 
-# Start the app
-CMD ["npm", "run", "start:dev"]
+# Start the app using 'start:prod' which typically runs the compiled 'dist' app
+CMD ["npm", "run", "start:prod"]
