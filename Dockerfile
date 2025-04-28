@@ -1,8 +1,6 @@
-# Use Node.js official image
-FROM node:18
+FROM node:18-alpine as builder
 
-# Set working directory
-WORKDIR /src
+WORKDIR /build
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
