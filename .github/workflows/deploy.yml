@@ -32,11 +32,9 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh ec2-user@16.170.234.250 << EOF
-            cd /home/ec2-user/var/www/test-ci-cd
+            cd /var/www/test-ci-cd
             git pull origin master
             npm install
             npm run build
-            pm2 stop nest-app || true
-            pm2 start dist/main.js --name nest-app
-            pm2 save
+            pm2 restart test-app || pm2 start dist/main.js --name test-app
           EOF
