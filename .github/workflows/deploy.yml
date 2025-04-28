@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main  # Trigger deploy on push to the main branch
+      - master  # Trigger deploy on push to the main branch
 
 jobs:
   deploy:
@@ -39,7 +39,7 @@ jobs:
         run: |
           ssh ec2-user@${{ secrets.EC2_HOST }} << EOF
             cd /var/www/test-ci-cd
-            git pull origin main  # Pull the latest changes from GitHub
+            git pull origin master  # Pull the latest changes from GitHub
             docker-compose down  # Stop and remove any previous containers
             docker-compose up --build -d  # Rebuild and start the containers in detached mode
           EOF
