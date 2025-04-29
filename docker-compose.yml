@@ -19,16 +19,17 @@ services:
 
   # PostgreSQL Service
   db:
-    image: postgres:13
-    container_name: postgres-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: test-db
+    image: postgres:15-alpine
     ports:
-      - '5432:5432' # Expose PostgreSQL on default port
+      - 5400:5432
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgresDB:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: test_db
+      TZ: UTC
+      PGTZ: UTC
 
 volumes:
-  postgres-data:
+  postgresDB:
