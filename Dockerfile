@@ -1,6 +1,6 @@
 FROM node:18-alpine as builder
 
-WORKDIR 
+WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -18,4 +18,4 @@ RUN npm run build  # This should generate the 'dist' folder
 EXPOSE 3000
 
 # Start the app using 'start:prod' which typically runs the compiled 'dist' app
-CMD ["npm", "run", "start:prod"]
+CMD [ "node", "/app/dist/main.js" ]
